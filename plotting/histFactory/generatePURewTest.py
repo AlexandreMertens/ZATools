@@ -50,13 +50,13 @@ nPVName = "nVX"
 
 # Cuts
 
+ll_weights = "(event_is_data !=1 ?( za_diLeptons[0].triggerSF * event_pu_weight * event_weight) : 1.0)"
 
-ll_weights = "( event_run < 200000 ? (za_diLeptons[0].triggerSF * event_pu_weight * event_weight) : 1.)"
 
 twoLCond = []
 twoLCondName = []
-twoLCond.append("za_mumu_Mll_cut")
-twoLCond.append("za_elel_Mll_cut")
+twoLCond.append("(za_mumu_Mll_cut && (za_mumu_fire_trigger_Mu17_Mu8_cut || za_mumu_fire_trigger_Mu17_TkMu8_cut) && za_diLeptons[0].isMM && za_diLeptons[0].triggerMatched)")
+twoLCond.append("(za_elel_Mll_cut && za_elel_fire_trigger_Ele17_Ele12_cut && za_diLeptons[0].isTT && za_diLeptons[0].triggerMatched)")
 twoLCond.append("(za_mumu_Mll_cut ||  za_elel_Mll_cut)")
 twoLCond.append("(za_muel_Mll_cut ||  za_elmu_Mll_cut)")
 twoLCondName.append("mm")
@@ -130,19 +130,19 @@ systematics = {'__jecup':'jecup',
                '__jerup':'jerup',
                '__jerdown':'jerdown'}
 
-cutBtagsMM = "za_mumu_DiJetBWP_MM_cut && za_mumu_LooseZCandidate_cut"
-cutBtagsMM_SYST = "za_SYST_mumu_DiJetBWP_MM_cut && za_SYST_mumu_LooseZCandidate_cut"
+cutBtagsMM = ["(za_mumu_DiJetBWP_MM_cut && za_mumu_LooseZCandidate_cut )","(za_elel_DiJetBWP_MM_cut && za_elel_LooseZCandidate_cut)"]
+cutBtagsMM_SYST = ["za_SYST_mumu_DiJetBWP_MM_cut && za_SYST_mumu_LooseZCandidate_cut","za_SYST_elel_DiJetBWP_MM_cut && za_SYST_elel_LooseZCandidate_cut"]
 
-fjson = open('plots_syst.py', 'w')
+fjson = open('plots_syst_CnC_500_250.py', 'w')
 fjson.write( "plots = [\n")
-fyml = open('plots_syst.yml', 'w')
+fyml = open('plots_syst_CnC_500_250.yml', 'w')
 
 weights = "event_pu_weight * event_weight"
 weights_puup = "event_pu_weight_up * event_weight"
 weights_pudown = "event_pu_weight_down * event_weight"
 
-llTrigSF = "(event_is_data !=1 ?( za_diLeptons[0].triggerSF) : 1.0)"
-llTrigSF_SYST = "(event_is_data !=1 ?( za_SYST_diLeptons[0].triggerSF) : 1.0)"
+llTrigSF = "(event_is_data !=1 ?( za_diLeptons[0].triggerSF * za_diLeptons[0].triggerMatched) : 1.0)"
+llTrigSF_SYST = "(event_is_data !=1 ?( za_SYST_diLeptons[0].triggerSF * za_SYST_diLeptons[0].triggerMatched) : 1.0)"
 
 #btagSF = "(event_is_data !=1 ? (jet_sf_csvv2_medium[za_diJets[0].idxJet1][0] * jet_sf_csvv2_medium[za_diJets[0].idxJet2][0] ) : 1.0)"
 #btagSFup = "(event_is_data !=1 ? (jet_sf_csvv2_medium[za_diJets[0].idxJet1][1] * jet_sf_csvv2_medium[za_diJets[0].idxJet2][1] ) : 1.0)"
@@ -157,17 +157,18 @@ btagSFup = "(event_is_data !=1 ? ( common::combineScaleFactors<2>({{{ jet_sf_csv
 
 btagSFdown = "(event_is_data !=1 ? ( common::combineScaleFactors<2>({{{ jet_sf_csvv2_medium[za_diJets[0].idxJet1][0] , jet_sf_csvv2_medium[za_diJets[0].idxJet1][1] }, { jet_sf_csvv2_medium[za_diJets[0].idxJet2][0] , jet_sf_csvv2_medium[za_diJets[0].idxJet2][1] }}}, {{1, 1}, {1, 1}}, common::Variation::DOWN) ) : 1.0) ";
 
+llIdIsoSF = "(za_diLeptons[0].isElEl ? common::combineScaleFactors<2>({{{ electron_sf_hww_wp[za_diLeptons[0].idxLep1][0] , 1 }, { electron_sf_hww_wp[za_diLeptons[0].idxLep2][0] , 1 }}}, {{1, 1}, {1, 1}}, common::Variation::NOMINAL) : common::combineScaleFactors<2>({{{ muon_sf_hww_wp[za_diLeptons[0].idxLep1][0] , 1 }, { muon_sf_hww_wp[za_diLeptons[0].idxLep2][0] , 1 }}}, {{1, 1}, {1, 1}}, common::Variation::NOMINAL))"
 
-llweights = {'': llTrigSF+'*'+weights,
-             '__puup': llTrigSF+'*'+weights_puup,
-             '__pudown': llTrigSF+'*'+weights_pudown
+llweights = {'': llIdIsoSF+'*'+llTrigSF+'*'+weights,
+             '__puup': llIdIsoSF+'*'+llTrigSF+'*'+weights_puup,
+             '__pudown': llIdIsoSF+'*'+llTrigSF+'*'+weights_pudown
     }
 
-llbbweights = {'': llTrigSF+'*'+btagSF+'*'+weights,
-             '__puup': llTrigSF+'*'+btagSF+'*'+weights_puup,
-             '__pudown': llTrigSF+'*'+btagSF+'*'+weights_pudown,
-             '__btagup': llTrigSF+'*'+btagSFup+'*'+weights,
-	     '__btagdown': llTrigSF+'*'+btagSFdown+'*'+weights
+llbbweights = {'': llIdIsoSF+'*'+llTrigSF+'*'+btagSF+'*'+weights,
+             '__puup': llIdIsoSF+'*'+llTrigSF+'*'+btagSF+'*'+weights_puup,
+             '__pudown': llIdIsoSF+'*'+llTrigSF+'*'+btagSF+'*'+weights_pudown,
+             '__btagup': llIdIsoSF+'*'+llTrigSF+'*'+btagSFup+'*'+weights,
+	     '__btagdown': llIdIsoSF+'*'+llTrigSF+'*'+btagSFdown+'*'+weights
     }
 
 
@@ -176,7 +177,7 @@ llbbweights = {'': llTrigSF+'*'+btagSF+'*'+weights,
 
 options = options_()
 
-for x in range(0,1):
+for x in range(0,2):
     for cutkey in options.cut :
         for s,w in llbbweights.iteritems() :
             print 'cutkey : ', cutkey
@@ -188,7 +189,7 @@ for x in range(0,1):
             printInPyWithSyst(fjson, fyml, 
                     name = twoLtwoBCondName[x]+"SR"+cutkey+s, 
                     variable = '0.5', 
-                    cut = options.cut[cutkey]+" && "+cutBtagsMM, 
+                    cut = options.cut[cutkey]+" && "+cutBtagsMM[x], 
                     weight = w, 
                     binning = "(1,0,1)", 
                     writeInPlotIt = (1 if s==''  else 0)
@@ -197,17 +198,38 @@ for x in range(0,1):
             printInPyWithSyst(fjson, fyml, 
                     name = mllName+'_'+twoLtwoBCondName[x]+"BR"+cutkey+s, 
                     variable = mll, 
-                    cut = "!"+options.cut[cutkey]+" && "+cutBtagsMM, 
+                    cut = "!"+options.cut[cutkey]+" && "+cutBtagsMM[x], 
                     weight = w, 
                     binning = mll_binning, 
                     writeInPlotIt = (1 if s==''  else 0)
                     )
+        for s1,s2 in systematics.iteritems() :
+            w = llTrigSF_SYST.replace('SYST',s2)+'*'+btagSF_SYST.replace('SYST',s2)+'*'+weights
+            ### SIGNAL Region ###
+            printInPyWithSyst(fjson, fyml, 
+                    name=twoLtwoBCondName[x]+"SR"+cutkey+s1, 
+                    variable="0.5", 
+                    cut= options.cut[cutkey]+" && "+cutBtagsMM_SYST[x].replace('SYST',s2), 
+                    weight=w, 
+                    binning="(1,0,1)", 
+                    writeInPlotIt= 0)
+            ### BACKGROUND Region ###
+            printInPyWithSyst(fjson, fyml,
+                    name=mllName+'_'+twoLtwoBCondName[x]+"BR"+cutkey+s1,
+                    variable=mll_SYST.replace('SYST',s2),
+                    cut= options.cut[cutkey]+" && "+cutBtagsMM_SYST[x].replace('SYST',s2),
+                    weight=w, 
+                    binning=mll_binning, 
+                    writeInPlotIt= 0)
+
         
+
+
 
 printInPyWithSyst(fjson, fyml,
             name = 'jet_sf_csvv2_medium',
             variable = 'jet_sf_csvv2_medium.size()',
-            cut = cutBtagsMM,
+            cut = cutBtagsMM[x],
             weight = w,
             binning = '(10,0,2)',
             writeInPlotIt = 0
@@ -218,7 +240,7 @@ printInPyWithSyst(fjson, fyml,
 
 ## Control Plots in ll category:
 
-for x in range(0,1):
+for x in range(0,2):
     for s,w in llweights.iteritems() : 
 	print x, s, w 
         # N of vertices
@@ -229,24 +251,24 @@ for x in range(0,1):
 
 ## Control Plots in llbb category:
 
-for x in range(0,1):
+for x in range(0,2):
     for s,w in llbbweights.iteritems() :
-        print x, s, w
+        print x, s, w, cutBtagsMM[x]
         # M_ll
-        printInPyWithSyst(fjson, fyml, name=mllName+'_'+twoLtwoBCondName[x]+s, variable=mll, cut=cutBtagsMM, weight=w, binning=mll_binning, writeInPlotIt= (1 if s==''  else 0))
+        printInPyWithSyst(fjson, fyml, name=mllName+'_'+twoLtwoBCondName[x]+s, variable=mll, cut=cutBtagsMM[x], weight=w, binning=mll_binning, writeInPlotIt= (1 if s==''  else 0))
         # M_bb
-        printInPyWithSyst(fjson, fyml, name=mbbName+'_'+twoLtwoBCondName[x]+s, variable=mbb, cut=cutBtagsMM, weight=w, binning=mbb_binning, writeInPlotIt= (1 if s==''  else 0))
+        printInPyWithSyst(fjson, fyml, name=mbbName+'_'+twoLtwoBCondName[x]+s, variable=mbb, cut=cutBtagsMM[x], weight=w, binning=mbb_binning, writeInPlotIt= (1 if s==''  else 0))
         # M_llbb
-        printInPyWithSyst(fjson, fyml, name=mllbbName+'_'+twoLtwoBCondName[x]+s, variable=mllbb, cut=cutBtagsMM, weight=w, binning=mllbb_binning, writeInPlotIt= (1 if s==''  else 0))
+        printInPyWithSyst(fjson, fyml, name=mllbbName+'_'+twoLtwoBCondName[x]+s, variable=mllbb, cut=cutBtagsMM[x], weight=w, binning=mllbb_binning, writeInPlotIt= (1 if s==''  else 0))
 
     for s1,s2 in systematics.iteritems() :
         w = llTrigSF_SYST.replace('SYST',s2)+'*'+btagSF_SYST.replace('SYST',s2)+'*'+weights
         # M_ll
-        printInPyWithSyst(fjson, fyml, name=mllName+'_'+twoLtwoBCondName[x]+s1, variable=mll_SYST.replace('SYST',s2), cut= " !event_is_data && "+ cutBtagsMM_SYST.replace('SYST',s2), weight=w, binning=mll_binning, writeInPlotIt= (1 if s==''  else 0))
+        printInPyWithSyst(fjson, fyml, name=mllName+'_'+twoLtwoBCondName[x]+s1, variable=mll_SYST.replace('SYST',s2), cut= " !event_is_data && "+ cutBtagsMM_SYST[x].replace('SYST',s2), weight=w, binning=mll_binning, writeInPlotIt= (1 if s==''  else 0))
         # M_bb
-        printInPyWithSyst(fjson, fyml, name=mbbName+'_'+twoLtwoBCondName[x]+s1, variable=mbb_SYST.replace('SYST',s2), cut= " !event_is_data && "+ cutBtagsMM_SYST.replace('SYST',s2), weight=w, binning=mbb_binning, writeInPlotIt= (1 if s==''  else 0))
+        printInPyWithSyst(fjson, fyml, name=mbbName+'_'+twoLtwoBCondName[x]+s1, variable=mbb_SYST.replace('SYST',s2), cut= " !event_is_data && "+ cutBtagsMM_SYST[x].replace('SYST',s2), weight=w, binning=mbb_binning, writeInPlotIt= (1 if s==''  else 0))
         # M_llbb
-        printInPyWithSyst(fjson, fyml, name=mllbbName+'_'+twoLtwoBCondName[x]+s1, variable=mllbb_SYST.replace('SYST',s2), cut= " !event_is_data && "+ cutBtagsMM_SYST.replace('SYST',s2), weight=w, binning=mllbb_binning, writeInPlotIt= (1 if s==''  else 0))
+        printInPyWithSyst(fjson, fyml, name=mllbbName+'_'+twoLtwoBCondName[x]+s1, variable=mllbb_SYST.replace('SYST',s2), cut= " !event_is_data && "+ cutBtagsMM_SYST[x].replace('SYST',s2), weight=w, binning=mllbb_binning, writeInPlotIt= (1 if s==''  else 0))
 
 
 fjson.write( "        ]\n")
