@@ -17,6 +17,7 @@ def printInPyWithSyst(f, g, name = '', variable = '', cut = '', weight = '', bin
       g.write("  log-y: both\n")
       g.write("  save-extensions: ['png','pdf']\n")
       g.write("  show-ratio: true\n")
+      g.write("  no-data: true\n")
 
 # binnings
 
@@ -45,7 +46,8 @@ mllbbName = "mllbb"
 
 # PV N
 
-nPV = "vertex_ndof.size()"
+nPV = "za_vertex_ndof.size()"
+nPV_SYST = "za_SYST_vertex_ndof.size()"
 nPVName = "nVX"
 
 # Cuts
@@ -133,9 +135,9 @@ systematics = {'__jecup':'jecup',
 cutBtagsMM = ["(za_mumu_DiJetBWP_MM_cut && za_mumu_LooseZCandidate_cut )","(za_elel_DiJetBWP_MM_cut && za_elel_LooseZCandidate_cut)"]
 cutBtagsMM_SYST = ["za_SYST_mumu_DiJetBWP_MM_cut && za_SYST_mumu_LooseZCandidate_cut","za_SYST_elel_DiJetBWP_MM_cut && za_SYST_elel_LooseZCandidate_cut"]
 
-fjson = open('plots_syst_CnC_500_250.py', 'w')
+fjson = open('plots_syst_CnC.py', 'w')
 fjson.write( "plots = [\n")
-fyml = open('plots_syst_CnC_500_250.yml', 'w')
+fyml = open('plots_syst_CnC_blind.yml', 'w')
 
 weights = "event_pu_weight * event_weight"
 weights_puup = "event_pu_weight_up * event_weight"
@@ -209,7 +211,7 @@ for x in range(0,2):
             printInPyWithSyst(fjson, fyml, 
                     name=twoLtwoBCondName[x]+"SR"+cutkey+s1, 
                     variable="0.5", 
-                    cut= options.cut[cutkey]+" && "+cutBtagsMM_SYST[x].replace('SYST',s2), 
+                    cut= " !event_is_data && "+options.cut[cutkey]+" && "+cutBtagsMM_SYST[x].replace('SYST',s2), 
                     weight=w, 
                     binning="(1,0,1)", 
                     writeInPlotIt= 0)
@@ -217,7 +219,7 @@ for x in range(0,2):
             printInPyWithSyst(fjson, fyml,
                     name=mllName+'_'+twoLtwoBCondName[x]+"BR"+cutkey+s1,
                     variable=mll_SYST.replace('SYST',s2),
-                    cut= options.cut[cutkey]+" && "+cutBtagsMM_SYST[x].replace('SYST',s2),
+                    cut= " !event_is_data && !"+options.cut[cutkey]+" && "+cutBtagsMM_SYST[x].replace('SYST',s2),
                     weight=w, 
                     binning=mll_binning, 
                     writeInPlotIt= 0)
@@ -244,7 +246,7 @@ for x in range(0,2):
     for s,w in llweights.iteritems() : 
 	print x, s, w 
         # N of vertices
-        printInPyWithSyst(fjson, fyml, name=nPVName+'_'+twoLCondName[x]+s, variable=nPV, cut=twoLCond[x], weight=w, binning=nPV_binning, writeInPlotIt= (1 if s==''  else 0))
+        #printInPyWithSyst(fjson, fyml, name=nPVName+'_'+twoLCondName[x]+s, variable=nPV, cut=twoLCond[x], weight=w, binning=nPV_binning, writeInPlotIt= (1 if s==''  else 0))
         # M_ll
         printInPyWithSyst(fjson, fyml, name=mllName+'_'+twoLCondName[x]+s, variable=mll, cut=twoLCond[x], weight=w, binning=mll_binning, writeInPlotIt= (1 if s==''  else 0))
 
