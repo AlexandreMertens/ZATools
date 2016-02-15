@@ -3,6 +3,9 @@ height: 800
 luminosity-label: '%lumi% fb^{-1} (13 TeV)'
 experiment: "CMS"
 extra-label: "Preliminary"
-root: '/home/fynu/amertens/scratch/cmssw/CMSSW_7_4_15/src/cp3_llbb/CommonTools/histFactory/16_01_11/build/'
-luminosity: 2200.00
-luminosity-error: 0
+root: '/home/fynu/amertens/scratch/cmssw/CMSSW_7_4_15/src/cp3_llbb/CommonTools/histFactory/PreApProdCnC/condor/output/' #CnCWithSyst/condor/output/' # systWithLepSF_2/condor/output/
+luminosity: 2197.421
+luminosity-error: 0.046
+show-overflow: true
+error-fill-style: 3154
+error-fill-color: "#ee556270"

@@ -5,10 +5,19 @@ files:
     include: ['MCFiles.yml', 'DoubleMuonFiles.yml', 'DoubleElectronFiles.yml']
 
 plots:
-    include: ['plots_all.yml']
+    include: ['../histFactory/plots_syst_CnC.yml'] #['../histFactory/plots_syst_withLepSF.yml']
 
 groups:
     DiEl_DiMu:
         legend: "data"
+    ST:
+        legend: "Single Top"
+        fill-color: '#ECD078' #'#D95B43'
 legend:
   position: [0.72, 0.62, 1.16, 0.90]
+
+systematics:
+  - pu
+  - btag
+  - jer
+  - jec
